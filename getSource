@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+import boto3
+import os
+import json
+import uuid
+from zipfile import ZipFile
+import shutil
+
+codePipelineClient = boto3.client('codepipeline')
+s3Client = boto3.resource('s3')
+
+codebuildInitiator=os.environ['CODEBUILD_INITIATOR']
+print(codebuildInitiator)
+codePipelineName=codebuildInitiator[13:]
+
+print("Processing source for "+codePipelineName)
+
+pipelineData = codePipelineClient.get_pipeline(
+    name=codePipelineName
+)
+print (pipelineData['pipeline'])
+
+
+#Get artifacts
+artifacts=[]
+for stage in pipelineData['pipeline']['stages']:
+  for action in stage['actions']:
+    if action['actionTypeId']['category']=='Source':
+     if 'S3Bucket' in action['configuration']:
+      bucket =  action['configuration']['S3Bucket']
+      object = action['configuration']['S3ObjectKey']
+      uri='s3://'+bucket+'/'+object
+      uriObj={}
+      uriObj['bucket']=bucket
+      uriObj['key']=object
+      print ('Identified Source: '+uri)
+      artifacts.append(uriObj)
+
+#create tmp path
+tmppath='/tmp/'+str(uuid.uuid4())
+os.mkdir(tmppath)
+
+#Get source artifacts and unzip
+for artifact in artifacts:
+    file=artifact['key']
+    bucket=artifact['bucket']
+    print("Downloading "+bucket+'/'+file)
+    s3Client.meta.client.download_file(bucket,file, tmppath+'/'+file)
+    ext=os.path.splitext(file)[1]
+    if (ext=='.zip'):
+        print("Unzipping "+file)
+        zf=ZipFile(tmppath+'/'+file,'r')
+        zf.extractall(tmppath)
+        os.remove(tmppath+'/'+file)

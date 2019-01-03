@@ -5,8 +5,7 @@ RUN set -ex \
     && apt-get update \
     && apt install -y apt-transport-https \
     && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
-    && apt-get install -y unzip zip \
-    && apt-get install -y --no-install-recommends wget python=2.7.* python2.7-dev=2.7.* \
+    && apt-get install -y --no-install-recommends unzip zip wget python=2.7.* python2.7-dev=2.7.* groff-base \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -16,8 +15,7 @@ RUN set -ex \
     && pip install awscli==1.* \
     && rm -fr /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN pip install awscli --upgrade
-
+RUN pip install awscli boto3 --upgrade
 
 COPY dockerd-entrypoint.sh /usr/local/bin/
-COPY getSource.sh /usr/local/bin
+COPY getSource /usr/local/bin
