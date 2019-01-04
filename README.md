@@ -26,9 +26,8 @@ Create a stage that has a CodeBuild activity
       - /usr/local/bin/getSource
   artifacts:
   files:
-     - /tmp/codebuildpipelinemunge/**/*
-     - /tmp/codebuildpipelinemunge/*
-  discard-paths: yes
+     - '**/*'
+  discard-paths: no
   ```
 
 The buildspec will invoke a python script "getSource" that will download any S3 sources in the pipeline and extract them to a common directory under /tmp. This directory will then be packaged into an output artifact that can later be consumed

@@ -7,7 +7,7 @@ import shutil
 
 codePipelineClient = boto3.client('codepipeline')
 s3Client = boto3.resource('s3')
-
+sourcedir=os.environ['CODEBUILD_SRC_DIR']
 codebuildInitiator=os.environ['CODEBUILD_INITIATOR']
 print(codebuildInitiator)
 codePipelineName=codebuildInitiator[13:]
@@ -34,11 +34,10 @@ for stage in pipelineData['pipeline']['stages']:
       print (' -- Found S3 Source: '+uri)
       artifacts.append(uriObj)
 
-#create tmp path
-print('\n\nCreating Tmp Directory')
-tmppath='/tmp/codebuildpipelinemunge'
-print(' -- '+tmppath)
-os.mkdir(tmppath)
+#clean source path
+print('\n\nCleaning Source Directory')
+print(' -- '+sourcedir)
+shutil.rmtree(sourcedir+'/*',True)
 
 #Get source artifacts and unzip
 print ('\n\nDownloading Artifacts')
@@ -46,17 +45,17 @@ for artifact in artifacts:
     file=artifact['key']
     bucket=artifact['bucket']
     print(" -- Downloading "+bucket+'/'+file)
-    s3Client.meta.client.download_file(bucket,file, tmppath+'/'+file)
+    s3Client.meta.client.download_file(bucket,file, sourcedir+'/'+file)
     ext=os.path.splitext(file)[1]
     if (ext=='.zip'):
         print(" ---- Unzipping "+file)
-        zf=ZipFile(tmppath+'/'+file,'r')
-        zf.extractall(tmppath)
-        os.remove(tmppath+'/'+file)
+        zf=ZipFile(sourcedir+'/'+file,'r')
+        zf.extractall(sourcedir)
+        os.remove(sourcedir+'/'+file)
 
 #List expected artifacts
 print('\n\nStructure to be packaged:');
-for dirname, dirnames, filenames in os.walk(tmppath):
+for dirname, dirnames, filenames in os.walk(sourcedir):
     # print path to all subdirectories first.
     for subdirname in dirnames:
         print(' -- '+os.path.join(dirname, subdirname))
