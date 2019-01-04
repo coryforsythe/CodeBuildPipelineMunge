@@ -26,7 +26,8 @@ Create a stage that has a CodeBuild activity
       - /usr/local/bin/getSource
   artifacts:
   files:
-     - /tmp/*/*
+     - /tmp/codebuildpipelinemunge/**/*
+     - /tmp/codebuildpipelinemunge/*
   discard-paths: yes
   ```
 

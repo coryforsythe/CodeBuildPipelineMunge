@@ -2,7 +2,6 @@
 import boto3
 import os
 import json
-import uuid
 from zipfile import ZipFile
 import shutil
 
@@ -37,7 +36,7 @@ for stage in pipelineData['pipeline']['stages']:
 
 #create tmp path
 print('\n\nCreating Tmp Directory')
-tmppath='/tmp/'+str(uuid.uuid4())
+tmppath='/tmp/codebuildpipelinemunge'
 print(' -- '+tmppath)
 os.mkdir(tmppath)
 
@@ -54,5 +53,16 @@ for artifact in artifacts:
         zf=ZipFile(tmppath+'/'+file,'r')
         zf.extractall(tmppath)
         os.remove(tmppath+'/'+file)
+
+#List expected artifacts
+print('\n\nStructure to be packaged:');
+for dirname, dirnames, filenames in os.walk(tmppath):
+    # print path to all subdirectories first.
+    for subdirname in dirnames:
+        print(' -- '+os.path.join(dirname, subdirname))
+
+    # print path to all filenames.
+    for filename in filenames:
+        print(' -- '+os.path.join(dirname, filename))
 
 print('\n\nDONE\n\n')
