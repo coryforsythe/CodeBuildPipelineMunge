@@ -30,7 +30,7 @@ Create a stage that has a CodeBuild activity
   discard-paths: no
   ```
 
-The buildspec will invoke a python script "getSource" that will download any S3 sources in the pipeline and extract them to a common directory under /tmp. This directory will then be packaged into an output artifact that can later be consumed
+The buildspec will invoke a python script "getSource" that will download any S3 sources in the pipeline and extract them. This directory will then be packaged into an output artifact that can later be consumed.
 
 ## IAM Considerations
 
