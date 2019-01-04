@@ -1,4 +1,4 @@
-FROM ubuntu:14.04.5
+FROM ubuntu:16.04
 
 RUN set -ex \
     && echo 'Acquire::CompressionTypes::Order:: "gz";' > /etc/apt/apt.conf.d/99use-gzip-compression \
@@ -15,7 +15,7 @@ RUN set -ex \
     && pip install awscli==1.* \
     && rm -fr /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN pip install awscli boto3 --upgrade
+RUN pip install awscli boto3 pyOpenSSL ndg-httpsclient pyasn1 --upgrade
 
 COPY dockerd-entrypoint.sh /usr/local/bin/
 COPY getSource /usr/local/bin
