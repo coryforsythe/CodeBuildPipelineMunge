@@ -32,6 +32,10 @@ Create a stage that has a CodeBuild activity
 
 The buildspec will invoke a python script "getSource" that will download any S3 sources in the pipeline and extract them. This directory will then be packaged into an output artifact that can later be consumed.
 
+### Specifying specific set of Artifacts
+
+If you do not wish to consume all available sources from the pipeline you may optionally set the *Artifacts_Included* and *Artifacts_Excluded* environment variables.  These variables may contain a comma-separated list of artifact names (those used in the pipeline) to include in the munged version.  Setting *Artifacts_Included* will override any values set in *Artifacts_Excluded*
+
 ## IAM Considerations
 
 The getSource script invoked from the container will leverage the AWS SDK to work with the S3 and CodePipeline services. As such, the CodeBuild Service Role will require permissions to perform these actions:

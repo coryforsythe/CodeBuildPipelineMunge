@@ -7,16 +7,40 @@ import shutil
 
 codePipelineClient = boto3.client('codepipeline')
 s3Client = boto3.resource('s3')
+
 sourcedir=os.environ['CODEBUILD_SRC_DIR']
+includeList=[]
+if 'Artifacts_Included' in os.environ:
+    includeList=os.environ['Artifacts_Included'].split(',')
+
+excludeList=[]
+if 'Artifacts_Excluded' in os.environ:
+    excludeList=os.environ['Artifacts_Excluded'].split(',')
+
 codebuildInitiator=os.environ['CODEBUILD_INITIATOR']
 print(codebuildInitiator)
 codePipelineName=codebuildInitiator[13:]
 
 print("\n\nProcessing source for "+codePipelineName+'\n\n')
+print("IncludeList -> "+",".join(str(x) for x in includeList))
+print("ExcludeList -> "+",".join(str(x) for x in excludeList))
 
 pipelineData = codePipelineClient.get_pipeline(
     name=codePipelineName
 )
+
+#clean source path
+#we have to prodive at least one artifact to CodeBuild, however
+#as the user can choose to later excluded it, we need to ensure
+#the working dir is clean
+print('\n\nCleaning Source Directory')
+print(' -- '+sourcedir)
+for root, dirs, files in os.walk(sourcedir):
+    for f in files:
+        os.unlink(os.path.join(root, f))
+    for d in dirs:
+        shutil.rmtree(os.path.join(root, d))
+
 
 print ("Getting artifacts from CodePipeline")
 #Get artifacts
@@ -24,6 +48,7 @@ artifacts=[]
 for stage in pipelineData['pipeline']['stages']:
   for action in stage['actions']:
     if action['actionTypeId']['category']=='Source':
+     artifactName=action['outputArtifacts'][0]['name']
      if 'S3Bucket' in action['configuration']:
       bucket =  action['configuration']['S3Bucket']
       object = action['configuration']['S3ObjectKey']
@@ -31,13 +56,17 @@ for stage in pipelineData['pipeline']['stages']:
       uriObj={}
       uriObj['bucket']=bucket
       uriObj['key']=object
+      uriObj['name']=artifactName
       print (' -- Found S3 Source: '+uri)
-      artifacts.append(uriObj)
 
-#clean source path
-print('\n\nCleaning Source Directory')
-print(' -- '+sourcedir)
-shutil.rmtree(sourcedir+'/*',True)
+      if (len(includeList)==0 and artifactName in excludeList):
+        print(' -- [skipping -> excluded]')
+      elif (len(includeList)>0 and artifactName not in includeList):
+        print(' -- [skipping -> not included]')
+      else:
+        artifacts.append(uriObj)
+        print(' -- [added]')
+
 
 #Get source artifacts and unzip
 print ('\n\nDownloading Artifacts')
